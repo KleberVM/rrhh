@@ -59,6 +59,7 @@ if (isset($_SESSION['message'])) {
 <?php include 'modals/users/addUserModal.php'; ?>
 <?php include 'modals/users/deleteUserModal.php'; ?>
 <?php include 'modals/users/editUserModal.php'; ?>
+<?php include 'modals/users/addUserTypeModal.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/scriptRecursive.js"></script>
@@ -139,11 +140,8 @@ let paginaActual = 1;
             message.style.display = 'none';
         }
     }, 5000); // 5000 ms = 5 segundos
-    
-    let editarModal = document.getElementById('editUserModal');
-    
 
- document.addEventListener('DOMContentLoaded', () => cargarUsuarios(paginaActual));
+    document.addEventListener('DOMContentLoaded', () => cargarUsuarios(paginaActual));
 </script>
 
 <style>

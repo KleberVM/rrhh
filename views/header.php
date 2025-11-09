@@ -1,5 +1,5 @@
 <?php
-include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
+//include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
 
 if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];

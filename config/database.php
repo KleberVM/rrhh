@@ -32,7 +32,7 @@ class Database {
     private $password;                  
     public $conn;
 
-    public function __construct($environment = 'production') {
+    public function __construct($environment = 'production') {// puede ser local o production
         $this->switchConnection($environment);
     }
 

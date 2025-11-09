@@ -82,7 +82,9 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             tabla.innerHTML = '';
 
             data.turnas.forEach(turna => {
-                const status = turna.turnadelete === 0 ? 'ACTIVO' : 'INACTIVO';
+                // Convertimos el valor a número para asegurar una comparación correcta
+                const isActive = parseInt(turna.turnadelete) === 0;
+                const status = isActive ? 'ACTIVO' : 'INACTIVO';
                 const turnaRow = `
                     <tr>
                         <td>${turna.turnacreate}</td>
@@ -110,13 +112,13 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
 
             const createPageItem = (page, label = page) => `
                 <li class="page-item ${pagina === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="cargarAsig(${page}, ${limite})">${label}</a>
+                    <a class="page-link" href="#" onclick="cargarAsigArea(${page}, ${limite}); return false;">${label}</a>
                 </li>
             `;
 
             paginacion.insertAdjacentHTML('beforeend', `
                 <li class="page-item ${pagina === 1 ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="cargarAsig(${pagina - 1}, ${limite})">
+                    <a class="page-link" href="#" onclick="cargarAsigArea(${pagina - 1}, ${limite}); return false;">
                         <i class="fas fa-angle-left"></i><span>Prev</span>
                     </a>
                 </li>
@@ -159,7 +161,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
 
             paginacion.insertAdjacentHTML('beforeend', `
                 <li class="page-item ${pagina === totalPages ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="cargarAsig(${pagina + 1}, ${limite})"><span>Next</span><i class="fas fa-angle-right"></i></a>
+                    <a class="page-link" href="#" onclick="cargarAsigArea(${pagina + 1}, ${limite}); return false;"><span>Next</span><i class="fas fa-angle-right"></i></a>
                 </li>
             `);
 
@@ -208,7 +210,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
 
     eliminaModal.addEventListener('hidden.bs.modal', () => {
         eliminaModal.querySelector('.modal-footer #codeturna').value = '';
-        cargarAsig(currentPage, rowsPerPage);
+        cargarAsigArea(currentPage, rowsPerPage);
     });
 
     document.addEventListener('DOMContentLoaded', () => {

@@ -83,7 +83,9 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             tabla.innerHTML = '';
 
             data.turnos.forEach(turno => {
-                const status = turno.turnwdelete === 0 ? 'ACTIVO' : 'INACTIVO';
+                // Convertimos el valor a número para asegurar una comparación correcta
+                const isActive = parseInt(turno.turnwdelete) === 0;
+                const status = isActive ? 'ACTIVO' : 'INACTIVO';
                 const turnoRow = `
                     <tr>
                         <td>${turno.turnwcreate}</td>
@@ -100,8 +102,8 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
                                data-bs-codeworker="${turno.codeworker}"
                                data-bs-codeturn="${turno.codeturn}"
                                data-bs-turnwdelete="${turno.turnwdelete}"
-                               data-bs-fullname="${turno.fullname}"
-                               data-bs-workercode="${turno.workercode}"
+                               data-bs-fullnameedit="${turno.fullname}"
+                               data-bs-workercodeDisplayedit="${turno.workercode}"
                                data-bs-turnstart="${turno.turnstart}"
                                data-bs-turnend="${turno.turnend}">
                                 <i class="fa-solid fa-pen-to-square"></i>
@@ -120,7 +122,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
 
             const createPageItem = (page, label = page) => `
                 <li class="page-item ${pagina === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="cargarAsig(${page}, ${limite})">${label}</a>
+                    <a class="page-link" href="#" onclick="cargarAsig(${page}, ${limite}); return false;">${label}</a>
                 </li>
             `;
 

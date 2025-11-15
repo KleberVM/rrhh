@@ -51,6 +51,7 @@ $subpagina = isset($_GET['s']) ? $_GET['s'] : '1';
                 <th scope="col">Cargo</th>
                 <th scope="col">Fecha Ingreso</th>
                 <th scope="col">Sexo</th>
+                <th scope="col">Estado</th>
                 <th scope="col">Acciones</th>
             </tr>
         </thead>
@@ -72,7 +73,7 @@ $subpagina = isset($_GET['s']) ? $_GET['s'] : '1';
     <ul class="pagination justify-content-center" id="pagination">
           <!--Páginas dinámicas-->
     </ul>
-</nav>
+        </nav>
 
 <script>
 function cambiarSubpagina(subpagina) {
@@ -97,13 +98,13 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
 
 
 
+<?php include 'modals/worker/addWorkerModal.php'; ?>
+<?php include 'modals/worker/workerview.php'; ?>
+<?php include 'modals/worker/deleteWorkerModal.php'; ?>
+
 <script src="../assets/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
-
-
-<?php include 'modals/worker/addWorkerModal.php'; ?>
-<?php include 'modals/worker/workerview.php'; ?>
 
 <script>
     const tabla = $('#tablaProductos tbody');
@@ -113,6 +114,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
     let currentPage = 1;
     let rowsPerPage = parseInt(registrosPorPaginaSelect.val());
     let totalPages = 1;
+    let lastWorkers = [];
 
     registrosPorPaginaSelect.on('change', function () {
         rowsPerPage = parseInt($(this).val());
@@ -135,7 +137,8 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                 throw new Error('Error al cargar los datos');
             }
             const data = await response.json();
-            construirTabla(data.workers, 'tablaProductos');
+            lastWorkers = Array.isArray(data.workers) ? data.workers : [];
+            construirTabla(lastWorkers, 'tablaProductos');
             construirHTMLDatos(data.workers);
             construirPaginacion(pagina, data.totalPaginas, limite, 'pagination');
     
@@ -152,6 +155,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                 ? '/resource/images/foto-perfil-mujer.avif' 
                 : '/resource/images/foto-perfil-hombre.avif';
             const workerImg = worker.workerimg ? `/${worker.workerimg}` : defaultImg;
+            const estado = (worker.workerstate === 1 || worker.workerstate === '1' || worker.workerstate === true) ? 'Activo' : 'Inactivo';
             const workerRow = `
                 <tr>
                     <td>${worker.workercode}</td>
@@ -160,6 +164,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                     <td>${worker.workerrol || '----'}</td>
                     <td>${worker.workerdateinit || '----'}</td>
                     <td>${worker.workersex || '----'}</td>
+                    <td>${estado}</td>
                     <td>
                         <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#workerview" data-bs-id="${worker.codeworker}">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -167,7 +172,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                         <a href="#" class="btn btn-sm btn-warning" onclick="getDataWorker('${worker.codeworker}'); return false;">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-                        <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="${worker.codeworker}">
+                        <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteWorkerModal" data-bs-id="${worker.codeworker}">
                             <i class="fa-solid fa-trash"></i>
                         </a>
                     </td>
@@ -574,7 +579,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                         <button class="btn btn-sm btn-warning" onclick="getDataWorker('${worker.codeworker}'); return false;">
                             <i class="fa-solid fa-pen-to-square"></i> Editar
                         </button>
-                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="${worker.codeworker}">
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteWorkerModal" data-bs-id="${worker.codeworker}">
                             <i class="fa-solid fa-trash"></i> Eliminar
                         </button>
                     </div>
@@ -589,8 +594,20 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
    let workerviewModal = document.getElementById('workerview');
 
    workerviewModal.addEventListener('show.bs.modal', event => {
-        let button = event.relatedTarget;
-        let codeworker = button.getAttribute('data-bs-id');
+        const button = event.relatedTarget;
+        const targetAttr = button ? button.getAttribute('data-bs-target') : '';
+        if (targetAttr && targetAttr !== '#workerview') {
+            try { console.log('[LOG] workerview.show ignored', { targetAttr, rel: button }); } catch(_) {}
+            event.preventDefault();
+            return;
+        }
+        const codeworker = button ? button.getAttribute('data-bs-id') : '';
+        try {
+            const openModals = Array.from(document.querySelectorAll('.modal.show')).map(m => m.id);
+            console.log('[LOG] workerview.show start', { codeworker, relatedTarget: !!button, openModals, activeElement: document.activeElement });
+        } catch(e) {}
+        if (typeof closeDeleteWorkerModal === 'function') closeDeleteWorkerModal();
+        if (!codeworker) return;
         
         // Seleccionar los elementos del modal
         let inputName1 = workerviewModal.querySelector('.modal-body #worker_name1');
@@ -749,9 +766,11 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
         }
             
             // Cargar Documentos
-            if (data.documents && data.documents.length > 0) {
-                const documentBody = workerviewModal.querySelector('.modal-body #documentWorker-body');
+            const documentBody = workerviewModal.querySelector('.modal-body #documentWorker-body');
+            if (documentBody) {
                 documentBody.innerHTML = '';
+            }
+            if (data.documents && data.documents.length > 0) {
                 data.documents.forEach(doc => {
                     let row = document.createElement('tr');
                     row.innerHTML = `
@@ -765,10 +784,10 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                             <i class="fas fa-trash delete-icon" onclick="deleteDocument(${doc.id})" style="cursor:pointer; color:red; margin-left:10px"></i>
                         </td>
                     `;
-                    documentBody.appendChild(row);
+                    if (documentBody) documentBody.appendChild(row);
                 });
             } else {
-                documentBody.innerHTML = '<tr><td colspan="6">No hay documentos registrados.</td></tr>';
+                if (documentBody) documentBody.innerHTML = '<tr><td colspan="6">No hay documentos registrados.</td></tr>';
             }
             
         })
@@ -1026,6 +1045,136 @@ function saveWorkShiftChanges(workShiftId, newTurnId) {
         }
     }
 
+    const deleteWorkerModal = document.getElementById('deleteWorkerModal');
+    if (deleteWorkerModal) {
+        deleteWorkerModal.addEventListener('show.bs.modal', function(event){
+            try {
+                const openBefore = Array.from(document.querySelectorAll('.modal.show')).map(m => m.id);
+                console.log('[LOG] delete.show start', { openBefore, relatedTarget: !!event.relatedTarget });
+            } catch(e) {}
+            try {
+                if (deleteWorkerModal.parentElement !== document.body) {
+                    document.body.appendChild(deleteWorkerModal);
+                    console.log('[LOG] delete.show movedToBody', { parent: deleteWorkerModal.parentElement && deleteWorkerModal.parentElement.tagName });
+                }
+            } catch(_) {}
+            document.querySelectorAll('.modal.show').forEach(m => {
+                const inst = bootstrap.Modal.getInstance(m);
+                if (inst) inst.hide();
+            });
+            const button = event.relatedTarget;
+            const codeId = button ? button.getAttribute('data-bs-id') : '';
+            console.log('[LOG] delete.show codeId', { codeId });
+            const hiddenInput = document.getElementById('codeworker_delete');
+            if (hiddenInput) hiddenInput.value = codeId;
+            const worker = lastWorkers.find(w => String(w.codeworker) === String(codeId));
+            const activo = worker ? (worker.workerstate === 1 || worker.workerstate === '1' || worker.workerstate === true) : false;
+            const estadoMensaje = document.getElementById('estadoMensaje');
+            const btnConfirm = document.getElementById('btnConfirmInactivo');
+            if (activo) {
+                if (estadoMensaje) estadoMensaje.textContent = 'El trabajador está ACTIVO. Se marcará como INACTIVO.';
+                if (btnConfirm) btnConfirm.disabled = false;
+            } else {
+                if (estadoMensaje) estadoMensaje.textContent = 'El trabajador ya está INACTIVO.';
+                if (btnConfirm) btnConfirm.disabled = true;
+            }
+            try {
+                const openAfter = Array.from(document.querySelectorAll('.modal.show')).map(m => m.id);
+                const cs = window.getComputedStyle(deleteWorkerModal);
+                const dlg = deleteWorkerModal.querySelector('.modal-dialog');
+                const csDlg = dlg ? window.getComputedStyle(dlg) : null;
+                const backdrop = document.querySelector('.modal-backdrop');
+                const csBackdrop = backdrop ? window.getComputedStyle(backdrop) : null;
+                console.log('[LOG] delete.show prepared', { openAfter, activeElement: document.activeElement, display: cs.display, visibility: cs.visibility, zIndex: cs.zIndex, dlgTransform: csDlg ? csDlg.transform : null, backdropOpacity: csBackdrop ? csBackdrop.opacity : null, backdropZ: csBackdrop ? csBackdrop.zIndex : null });
+            } catch(e) {}
+            setTimeout(() => {
+                try {
+                    const cs = window.getComputedStyle(deleteWorkerModal);
+                    if (cs.display === 'none') {
+                        console.warn('[LOG] delete.show fallback: forcing display block');
+                        deleteWorkerModal.style.display = 'block';
+                        deleteWorkerModal.classList.add('show');
+                        deleteWorkerModal.setAttribute('aria-hidden', 'false');
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.style.zIndex = '1060';
+                        const csAfter = window.getComputedStyle(deleteWorkerModal);
+                        console.log('[LOG] delete.show forced', { display: csAfter.display, visibility: csAfter.visibility, zIndex: csAfter.zIndex });
+                        try {
+                            const inst = bootstrap.Modal.getInstance(deleteWorkerModal) || new bootstrap.Modal(deleteWorkerModal, { backdrop: true, keyboard: true });
+                            inst.show();
+                        } catch(_) {}
+                    }
+                } catch(e) {}
+            }, 50);
+        });
+        deleteWorkerModal.addEventListener('hidden.bs.modal', function(){
+            const hiddenInput = document.getElementById('codeworker_delete');
+            if (hiddenInput) hiddenInput.value = '';
+            console.log('[LOG] delete.hidden');
+            try {
+                deleteWorkerModal.classList.remove('show');
+                deleteWorkerModal.style.removeProperty('display');
+                deleteWorkerModal.style.removeProperty('opacity');
+                deleteWorkerModal.style.removeProperty('visibility');
+                deleteWorkerModal.setAttribute('aria-hidden', 'true');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.style.removeProperty('z-index');
+                console.log('[LOG] delete.hidden reset');
+            } catch(_) {}
+        });
+        deleteWorkerModal.addEventListener('shown.bs.modal', function(){
+            try {
+                const cs = window.getComputedStyle(deleteWorkerModal);
+                const dlg = deleteWorkerModal.querySelector('.modal-dialog');
+                const csDlg = dlg ? window.getComputedStyle(dlg) : null;
+                console.log('[LOG] delete.shown computed', { display: cs.display, visibility: cs.visibility, zIndex: cs.zIndex, dlgTransform: csDlg ? csDlg.transform : null });
+                if (cs.display === 'none' || cs.visibility === 'hidden') {
+                    deleteWorkerModal.style.display = 'block';
+                    deleteWorkerModal.style.visibility = 'visible';
+                }
+                const inst = bootstrap.Modal.getInstance(deleteWorkerModal) || new bootstrap.Modal(deleteWorkerModal, { backdrop: true, keyboard: true });
+                const closeBtns = deleteWorkerModal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+                closeBtns.forEach(btn => {
+                    btn.addEventListener('click', function(){
+                        try { inst.hide(); } catch(_) {}
+                    });
+                });
+            } catch(e) {}
+        });
+
+        document.addEventListener('click', function(e){
+            const trigger = e.target.closest('[data-bs-target="#deleteWorkerModal"]');
+            if (!trigger) return;
+            const codeId = trigger.getAttribute('data-bs-id') || '';
+            console.log('[LOG] delete.trigger click', { codeId, trigger });
+        });
+    }
+
+    document.addEventListener('hidden.bs.modal', function(e){
+        try {
+            if (e.target.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+        } catch(_) {}
+        e.target.setAttribute('inert', '');
+    });
+
+    document.addEventListener('show.bs.modal', function(e){
+        e.target.removeAttribute('inert');
+    });
+
+    // Acción confirmar inactivar con Bootstrap modal
+    (function(){
+        const btnConfirm = document.getElementById('btnConfirmInactivo');
+        if (btnConfirm) btnConfirm.addEventListener('click', function(){
+            const disabled = this.disabled;
+            if (disabled) {
+                const estadoMensaje = document.getElementById('estadoMensaje');
+                if (estadoMensaje) estadoMensaje.textContent = 'El trabajador ya está INACTIVO.';
+            }
+        });
+    })();
+
     $(document).ready(() => cargarTrabajadores(currentPage, rowsPerPage));
 </script>
 
@@ -1127,5 +1276,7 @@ function saveWorkShiftChanges(workShiftId, newTurnId) {
 }
 
 
-    
+#deleteWorkerModal { z-index: 1065; }
+#deleteWorkerModal.show { display: block !important; visibility: visible !important; }
+#deleteWorkerModal .modal-dialog { transform: translate(0, 0) !important; }
 </style>

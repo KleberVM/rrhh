@@ -67,7 +67,7 @@ try {
             'workercode' => $row['workercode'],
             'fullname' => $row['fullname'],
             'workerdocnumber' => $row['workerdocnumber'],
-            'workerimg' => !empty($row['workerimg']) ? $row['workerimg'] : '/resourse/images/default_imageM.webp',
+            'workerimg' => !empty($row['workerimg']) ? $row['workerimg'] : '',
             'workerrol' => $row['workerrol'],
             'workerdateinit' => $row['workerdateinit'],
             'workersex' => $row['workersex']

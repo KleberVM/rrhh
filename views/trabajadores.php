@@ -148,10 +148,10 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
         const tbody = $(`#${tablaId} tbody`);
         tbody.empty();
         workers.forEach(worker => {
-            const workerImg = worker.workerimg ? `/${worker.workerimg}` : '';
             const defaultImg = worker.workersex === 'F' 
                 ? '/resource/images/foto-perfil-mujer.avif' 
                 : '/resource/images/foto-perfil-hombre.avif';
+            const workerImg = worker.workerimg ? `/${worker.workerimg}` : defaultImg;
             const workerRow = `
                 <tr>
                     <td>${worker.workercode}</td>
@@ -221,7 +221,12 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                 setIf('workerdateinit', data.workerdateinit);
                 setIf('workerdateout', data.workerdateout);
                 const img = document.getElementById('imgProfile');
-                if (img) img.src = data.workerimg ? ('/' + data.workerimg) : img.src;
+                if (img) {
+                    const defaultImg = data.workersex === 'F' 
+                        ? '/resource/images/foto-perfil-mujer.avif' 
+                        : '/resource/images/foto-perfil-hombre.avif';
+                    img.src = data.workerimg ? ('/' + data.workerimg) : defaultImg;
+                }
                 const cuentas = document.getElementById('cuentas-container');
                 if (cuentas) {
                     cuentas.innerHTML = '';

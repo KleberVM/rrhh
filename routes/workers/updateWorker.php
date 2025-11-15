@@ -152,6 +152,83 @@ try {
         throw new Exception('Error al actualizar el trabajador');
     }
 
+    $conn->exec("DELETE FROM account WHERE codeworker = $codeworkerId");
+    if (isset($_POST['nameBank']) && isset($_POST['cuentaBank']) && is_array($_POST['nameBank']) && is_array($_POST['cuentaBank'])) {
+        $nameBanks = $_POST['nameBank'];
+        $cuentaBanks = $_POST['cuentaBank'];
+        foreach ($nameBanks as $index => $nameBank) {
+            $bank = trim((string)$nameBank);
+            $accNum = isset($cuentaBanks[$index]) ? trim((string)$cuentaBanks[$index]) : '';
+            if ($bank === '' && $accNum === '') continue;
+            $accountbank = $conn->quote($bank);
+            $accountnro = $conn->quote($accNum);
+            $sqlAccount = "INSERT INTO account (codeworker, accountbank, accountnro) VALUES ($codeworkerId, $accountbank, $accountnro)";
+            if ($conn->exec($sqlAccount) === false) throw new Exception('Error al actualizar cuentas');
+        }
+    }
+
+    $conn->exec("DELETE FROM family WHERE codeworker = $codeworkerId");
+    if (isset($_POST['familyname']) && is_array($_POST['familyname'])) {
+        $familynames = $_POST['familyname'];
+        $familylastnames = $_POST['familylastname'] ?? [];
+        $familysexes = $_POST['familysex'] ?? [];
+        $familyages = $_POST['familyage'] ?? [];
+        $familykins = $_POST['familykin'] ?? [];
+        foreach ($familynames as $index => $familynameVal) {
+            $fname = $conn->quote($familynameVal);
+            $flast = $conn->quote($familylastnames[$index] ?? '');
+            $fsex = $conn->quote($familysexes[$index] ?? '');
+            $fage = $conn->quote($familyages[$index] ?? '');
+            $fkin = $conn->quote($familykins[$index] ?? '');
+            $sqlFamily = "INSERT INTO family (codeworker, familyname, familylastname, familysex, familyage, familykin) VALUES ($codeworkerId, $fname, $flast, $fsex, $fage, $fkin)";
+            if ($conn->exec($sqlFamily) === false) throw new Exception('Error al actualizar familiares');
+        }
+    }
+
+    $conn->exec("DELETE FROM turnw WHERE codeworker = $codeworkerId");
+    if (isset($_POST['codeturn']) && is_array($_POST['codeturn'])) {
+        $turnwname = $conn->quote($_POST['workername1'] ?? '');
+        $turnwlastname = $conn->quote($_POST['workerlastname1'] ?? '');
+        foreach ($_POST['codeturn'] as $codeturn) {
+            if ($codeturn === '' || $codeturn === null) continue;
+            $ct = $conn->quote($codeturn);
+            $sqlTurnw = "INSERT INTO turnw (codeworker, codeturn, turnwname, turnwlastname) VALUES ($codeworkerId, $ct, $turnwname, $turnwlastname)";
+            if ($conn->exec($sqlTurnw) === false) throw new Exception('Error al actualizar turnos');
+        }
+    }
+
+    if (isset($_POST['grado-formacion']) && is_array($_POST['grado-formacion'])) {
+        $certificadosDir = '../../resource/certificados/';
+        if (!file_exists($certificadosDir)) mkdir($certificadosDir, 0777, true);
+        $file = $_FILES['foto-certificado'] ?? null;
+        $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf', 'webp', 'avif'];
+        $maxFileSize = 30 * 1024 * 1024;
+        foreach ($_POST['grado-formacion'] as $index => $grado) {
+            $gradoFormacion = $conn->quote($grado);
+            $titulo = $conn->quote($_POST['titulo'][$index] ?? '');
+            $descripcionCurso = $conn->quote($_POST['descripcion-curso'][$index] ?? '');
+            $fechaCursada = $conn->quote($_POST['fecha-cursada'][$index] ?? '');
+            $urlCertificado = 'NULL';
+            if ($file && isset($file['name'][$index])) {
+                if ($file['error'][$index] === UPLOAD_ERR_OK) {
+                    $fileSize = $file['size'][$index];
+                    $extension = strtolower(pathinfo($file['name'][$index], PATHINFO_EXTENSION));
+                    if (in_array($extension, $extensionesPermitidas) && ($fileSize <= $maxFileSize)) {
+                        $nombreArchivo = uniqid('cert_', true) . '.' . $extension;
+                        $rutaDestino = $certificadosDir . $nombreArchivo;
+                        if (move_uploaded_file($file['tmp_name'][$index], $rutaDestino)) {
+                            $urlCertificado = $conn->quote('resource/certificados/' . $nombreArchivo);
+                        }
+                    }
+                }
+            }
+            if ($file && isset($file['name'][$index]) && $file['error'][$index] === UPLOAD_ERR_OK) {
+                $sqlDocument = "INSERT INTO documentWorker (codeWorker, gradoFormacion, titulo, urlCertificado, descripcionCurso, fechaCursada) VALUES ($codeworkerId, $gradoFormacion, $titulo, $urlCertificado, $descripcionCurso, $fechaCursada)";
+                if ($conn->exec($sqlDocument) === false) throw new Exception('Error al actualizar documentos');
+            }
+        }
+    }
+
     $conn->commit();
     $_SESSION['message'] = 'Trabajador actualizado correctamente';
     $_SESSION['message_type'] = 'success';

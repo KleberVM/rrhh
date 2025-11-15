@@ -1,0 +1,11 @@
+# Ignorar archivo .env
+.env
+
+# Ignorar credenciales
+config/database.php
+
+# Ignorar certificados
+resource/certificados/
+
+# Ignorar imágenes de workers
+resource/workers/

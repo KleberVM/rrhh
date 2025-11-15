@@ -38,7 +38,7 @@ $subpagina = isset($_GET['s']) ? $_GET['s'] : '1';
 
 
 
-<!-- Contenido de Subp¨¢gina 1 -->
+<!-- Contenido de Subpï¿½ï¿½gina 1 -->
 <div id="subpagina1" style="display: <?php echo ($subpagina == '1') ? 'block' : 'none'; ?>;">
     <!--Tabla de trabajadores-->
 <div class="containerTable">
@@ -61,7 +61,7 @@ $subpagina = isset($_GET['s']) ? $_GET['s'] : '1';
 </div>
 </div>
 
-<!-- Contenido de Subp¨¢gina 2 -->
+<!-- Contenido de Subpï¿½ï¿½gina 2 -->
 <div id="subpagina2" style="display: <?php echo ($subpagina == '2') ? 'block' : 'none'; ?>;">
     <div id="htmlDatos"></div>
 </div>
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
 
     registrosPorPaginaSelect.on('change', function () {
         rowsPerPage = parseInt($(this).val());
-        currentPage = 1; // Reiniciar a la primera p¨¢gina
+        currentPage = 1; // Reiniciar a la primera pï¿½ï¿½gina
         cargarTrabajadores(currentPage, rowsPerPage);
     });
 
@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
     
         } catch (error) {
             console.error('Error al cargar trabajadores:', error);
-            alert('Hubo un error al cargar los trabajadores. Por favor, int¨¦ntalo de nuevo.');
+            alert('Hubo un error al cargar los trabajadores. Por favor, intï¿½ï¿½ntalo de nuevo.');
         }
     }
     function construirTabla(workers, tablaId) {
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                         <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#workerview" data-bs-id="${worker.codeworker}">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </a>
-                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-toggle="modal" data-bs-target="#addWorkerModal" onclick="getDataWorker('${worker.codeworker}')">
+                        <a href="#" class="btn btn-sm btn-warning" onclick="getDataWorker('${worker.codeworker}'); return false;">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
                         <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="${worker.codeworker}">
@@ -180,27 +180,299 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
     
     //AQUI AGREGAR EL METODO FETCH PARAO BTENER LOS DATOS DEL TRABAJADOR
     function getDataWorker(id) {
-        console.log(id);
         document.getElementById('code_worker').value = id;
-    
-        // Enviar id por fetch
-        fetch('../routes/workers/getDataWorkers.php', {
+        fetch('../routes/workers/workerview.php', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: 'id=' + encodeURIComponent(id)
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'codeworker=' + encodeURIComponent(id)
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
-            console.log(data);
-           
-           
-           
+            if (data && !data.error) {
+                const setIf = (elId, val) => { const el = document.getElementById(elId); if (el != null) el.value = val || ''; };
+                setIf('workercode', data.workercode);
+                setIf('workername1', data.workername1);
+                setIf('workername2', data.workername2);
+                setIf('workerlastname1', data.workerlastname1);
+                setIf('workerlastname2', data.workerlastname2);
+                setIf('workerhousbandname', data.workerhousbandname);
+                setIf('workerbirthdate', data.workerbirthdate);
+                setIf('workertypedoc', data.workertypedoc);
+                setIf('workerdoccity', data.workerdoccity);
+                setIf('workerdocnumber', data.workerdocnumber);
+                setIf('workersecurenum', data.workersecurenum);
+                setIf('workercuanum', data.workercuanum);
+                setIf('workercity', data.workercity);
+                setIf('workeremail', data.workeremail);
+                setIf('workerphone1', data.workerphone1);
+                setIf('workerphone2', data.workerphone2);
+                setIf('codearea', data.codearea || data.workerarea);
+                setIf('namearea', data.namearea || data.workerarea_name);
+                setIf('codeoccupation', data.codeoccupation || data.workerrol);
+                setIf('nameoccupation', data.nameoccupation || data.workerrol_name);
+                setIf('codesection', data.codesection || data.workersection);
+                setIf('namesection', data.namesection || data.workersection_name);
+                setIf('workeraddress', data.workeraddress);
+                setIf('workernationality', data.workernationality);
+                setIf('workersex', data.workersex);
+                setIf('workernit', data.workernit);
+                setIf('workercivilstatus', data.workercivilstatus);
+                setIf('accountMain', data.accountMain || data.workerbanknum);
+                setIf('workerdateinit', data.workerdateinit);
+                setIf('workerdateout', data.workerdateout);
+                const img = document.getElementById('imgProfile');
+                if (img) img.src = data.workerimg ? ('/' + data.workerimg) : img.src;
+                const cuentas = document.getElementById('cuentas-container');
+                if (cuentas) {
+                    cuentas.innerHTML = '';
+                    const accs = Array.isArray(data.accounts) ? data.accounts : [];
+                    if (accs.length) {
+                        accs.forEach(acc => {
+                            const div = document.createElement('div');
+                            div.className = 'elementoForm elemDinamico';
+                            div.innerHTML = `
+                                <div class="elementoForm">
+                                    <label class="labelForm">Banco:</label>
+                                    <input type="text" class="form-control" name="nameBank[]" value="${acc.accountbank || ''}" required>
+                                </div>
+                                <div class="elementoForm">
+                                    <label class="labelForm">Cuenta:</label>
+                                    <input type="text" class="form-control" name="cuentaBank[]" value="${acc.accountnro || ''}" required>
+                                </div>
+                            `;
+                            cuentas.appendChild(div);
+                        });
+                    } else {
+                        const div = document.createElement('div');
+                        div.className = 'elementoForm elemDinamico';
+                        div.innerHTML = `
+                            <div class="elementoForm">
+                                <label class="labelForm">Banco:</label>
+                                <input type="text" class="form-control" name="nameBank[]" value="" required>
+                            </div>
+                            <div class="elementoForm">
+                                <label class="labelForm">Cuenta:</label>
+                                <input type="text" class="form-control" name="cuentaBank[]" value="" required>
+                            </div>
+                        `;
+                        cuentas.appendChild(div);
+                    }
+                }
+                const fams = document.getElementById('familares-container');
+                if (fams) {
+                    fams.innerHTML = '';
+                    const famList = Array.isArray(data.family) ? data.family : [];
+                    if (famList.length) {
+                        famList.forEach(f => {
+                            const div = document.createElement('div');
+                            div.className = 'familiar';
+                            div.innerHTML = `
+                                <div style="background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;">
+                                    <div class="elementoForm"><label>Nombre:</label><input type="text" name="familyname[]" value="${f.familyname || ''}" required></div>
+                                    <div class="elementoForm"><label>Apellido:</label><input type="text" name="familylastname[]" value="${f.familylastname || ''}" required></div>
+                                    <div class="elementoForm"><label>Sexo:</label>
+                                        <select name="familysex[]">
+                                            <option value="" ${!f.familysex?'selected':''}>Seleccione...</option>
+                                            <option value="masculino" ${f.familysex==='masculino'?'selected':''}>Masculino</option>
+                                            <option value="femenino" ${f.familysex==='femenino'?'selected':''}>Femenino</option>
+                                            <option value="otros" ${f.familysex==='otros'?'selected':''}>Otros</option>
+                                        </select>
+                                    </div>
+                                    <div class="elementoForm"><label>Edad:</label><input type="text" name="familyage[]" value="${f.familyage || ''}" required></div>
+                                    <div class="elementoForm"><label>Parentesco:</label>
+                                        <select name="familykin[]">
+                                            <option value="" ${!f.familykin?'selected':''}>Seleccione...</option>
+                                            <option value="padre" ${f.familykin==='padre'?'selected':''}>Padre</option>
+                                            <option value="madre" ${f.familykin==='madre'?'selected':''}>Madre</option>
+                                            <option value="hijo" ${f.familykin==='hijo'?'selected':''}>Hijo</option>
+                                            <option value="hija" ${f.familykin==='hija'?'selected':''}>Hija</option>
+                                            <option value="hermano" ${f.familykin==='hermano'?'selected':''}>Hermano</option>
+                                            <option value="hermana" ${f.familykin==='hermana'?'selected':''}>Hermana</option>
+                                            <option value="abuelo" ${f.familykin==='abuelo'?'selected':''}>Abuelo</option>
+                                            <option value="abuela" ${f.familykin==='abuela'?'selected':''}>Abuela</option>
+                                            <option value="tio" ${f.familykin==='tio'?'selected':''}>TÃ­o</option>
+                                            <option value="tia" ${f.familykin==='tia'?'selected':''}>TÃ­a</option>
+                                            <option value="sobrino" ${f.familykin==='sobrino'?'selected':''}>Sobrino</option>
+                                            <option value="sobrina" ${f.familykin==='sobrina'?'selected':''}>Sobrina</option>
+                                            <option value="primo" ${f.familykin==='primo'?'selected':''}>Primo</option>
+                                            <option value="prima" ${f.familykin==='prima'?'selected':''}>Prima</option>
+                                            <option value="otros" ${f.familykin==='otros'?'selected':''}>Otros</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            `;
+                            fams.appendChild(div);
+                        });
+                    } else {
+                        const div = document.createElement('div');
+                        div.className = 'familiar';
+                        div.innerHTML = `
+                            <div style="background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;">
+                                <div class="elementoForm"><label>Nombre:</label><input type="text" name="familyname[]" value="" required></div>
+                                <div class="elementoForm"><label>Apellido:</label><input type="text" name="familylastname[]" value="" required></div>
+                                <div class="elementoForm"><label>Sexo:</label>
+                                    <select name="familysex[]">
+                                        <option value="" selected>Seleccione...</option>
+                                        <option value="masculino">Masculino</option>
+                                        <option value="femenino">Femenino</option>
+                                        <option value="otros">Otros</option>
+                                    </select>
+                                </div>
+                                <div class="elementoForm"><label>Edad:</label><input type="text" name="familyage[]" value="" required></div>
+                                <div class="elementoForm"><label>Parentesco:</label>
+                                    <select name="familykin[]">
+                                        <option value="" selected>Seleccione...</option>
+                                        <option value="padre">Padre</option>
+                                        <option value="madre">Madre</option>
+                                        <option value="hijo">Hijo</option>
+                                        <option value="hija">Hija</option>
+                                        <option value="hermano">Hermano</option>
+                                        <option value="hermana">Hermana</option>
+                                        <option value="abuelo">Abuelo</option>
+                                        <option value="abuela">Abuela</option>
+                                        <option value="tio">TÃ­o</option>
+                                        <option value="tia">TÃ­a</option>
+                                        <option value="sobrino">Sobrino</option>
+                                        <option value="sobrina">Sobrina</option>
+                                        <option value="primo">Primo</option>
+                                        <option value="prima">Prima</option>
+                                        <option value="otros">Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        `;
+                        fams.appendChild(div);
+                    }
+                }
+                const turnsContainer = document.getElementById('turnos-container');
+                if (turnsContainer) {
+                    turnsContainer.innerHTML = '';
+                    fetch('../routes/workers/getTurns.php')
+                        .then(rr => rr.json())
+                        .then(allTurns => {
+                            let baseIndex = 1000;
+                            const turnList = Array.isArray(data.turnw) ? data.turnw : [];
+                            if (turnList.length) {
+                                turnList.forEach((t, idx) => {
+                                    const index = baseIndex + idx;
+                                    const wrapper = document.createElement('div');
+                                    wrapper.className = 'elementoForm elemDinamico';
+                                    wrapper.id = `turno_${index}`;
+                                    const options = allTurns.map(turn => {
+                                        const isSelected = (String(turn.id) === String(t.codeturn)) || (turn.turn_name === t.turn_name && turn.turn_start === t.turn_start && turn.turn_end === t.turn_end);
+                                        return `<option value="${turn.id}" data-start="${turn.turn_start}" data-end="${turn.turn_end}" ${isSelected ? 'selected' : ''}>${turn.turn_name} (${turn.turn_start} - ${turn.turn_end})</option>`;
+                                    }).join('');
+                                    wrapper.innerHTML = `
+                                        <div class="elementoForm">
+                                            <label class="labelForm">Turno:</label>
+                                            <select class="form-select" name="codeturn[]" onchange="mostrarDetallesTurno(this.value, ${index})">
+                                                <option value="">Seleccione una opciÃ³n</option>
+                                                ${options}
+                                            </select>
+                                        </div>
+                                        <div class="elementoForm">
+                                            <label class="labelForm">Horario de Inicio de Turno:</label>
+                                            <input type="text" class="form-control" name="turnstart[]" readonly value="${t.turn_start || ''}" required>
+                                        </div>
+                                        <div class="elementoForm">
+                                            <label class="labelForm">Horario de Fin de Turno:</label>
+                                            <input type="text" class="form-control" name="turnend[]" readonly value="${t.turn_end || ''}" required>
+                                        </div>
+                                    `;
+                                    turnsContainer.appendChild(wrapper);
+                                });
+                            } else {
+                                const index = baseIndex;
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'elementoForm elemDinamico';
+                                wrapper.id = `turno_${index}`;
+                                const options = allTurns.map(turn => (
+                                    `<option value="${turn.id}" data-start="${turn.turn_start}" data-end="${turn.turn_end}">${turn.turn_name} (${turn.turn_start} - ${turn.turn_end})</option>`
+                                )).join('');
+                                wrapper.innerHTML = `
+                                    <div class="elementoForm">
+                                        <label class="labelForm">Turno:</label>
+                                        <select class="form-select" name="codeturn[]" onchange="mostrarDetallesTurno(this.value, ${index})">
+                                            <option value="" selected>Seleccione una opciÃ³n</option>
+                                            ${options}
+                                        </select>
+                                    </div>
+                                    <div class="elementoForm">
+                                        <label class="labelForm">Horario de Inicio de Turno:</label>
+                                        <input type="text" class="form-control" name="turnstart[]" readonly required>
+                                    </div>
+                                    <div class="elementoForm">
+                                        <label class="labelForm">Horario de Fin de Turno:</label>
+                                        <input type="text" class="form-control" name="turnend[]" readonly required>
+                                    </div>
+                                `;
+                                turnsContainer.appendChild(wrapper);
+                            }
+                        });
+                }
+                const docs = document.getElementById('documents-container');
+                if (docs) {
+                    docs.innerHTML = '';
+                    const docList = Array.isArray(data.documents) ? data.documents : [];
+                    if (docList.length) {
+                        docList.forEach(doc => {
+                            const div = document.createElement('div');
+                            div.className = 'document';
+                            div.innerHTML = `
+                                <div style=\"background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;\">
+                                    <div class=\"elementoForm\"><label>Grado de formaciÃ³n</label>
+                                        <select name=\"grado-formacion[]\" required>
+                                            <option value=\"\" ${doc.gradoFormacion ? '' : 'selected'}>Seleccione...</option>
+                                            <option value=\"escuela\" ${doc.gradoFormacion==='escuela'?'selected':''}>Escuela</option>
+                                            <option value=\"colegio\" ${doc.gradoFormacion==='colegio'?'selected':''}>Colegio</option>
+                                            <option value=\"tecnico\" ${doc.gradoFormacion==='tecnico'?'selected':''}>TÃ©cnico</option>
+                                            <option value=\"universidad\" ${doc.gradoFormacion==='universidad'?'selected':''}>Universidad</option>
+                                            <option value=\"otro\" ${doc.gradoFormacion==='otro'?'selected':''}>Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class=\"elementoForm\"><label>TÃ­tulo</label><input type=\"text\" name=\"titulo[]\" value=\"${doc.titulo || ''}\" required /></div>
+                                    <div class=\"elementoForm\"><label>DescripciÃ³n del curso</label><textarea name=\"descripcion-curso[]\" style=\"width:150px;\">${doc.descripcionCurso || ''}</textarea></div>
+                                    <div class=\"elementoForm\"><label>Fecha cursada</label><input type=\"date\" name=\"fecha-cursada[]\" value=\"${doc.fechaCursada || ''}\" /></div>
+                                    ${doc.urlCertificado ? `<div class=\"elementoForm\"><a href=\"${doc.urlCertificado}\" target=\"_blank\">Ver certificado</a></div>` : ''}
+                                </div>
+                            `;
+                            docs.appendChild(div);
+                        });
+                    } else {
+                        const div = document.createElement('div');
+                        div.className = 'document';
+                        div.innerHTML = `
+                            <div style=\"background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;\">
+                                <div class=\"elementoForm\"><label>Grado de formaciÃ³n</label>
+                                    <select name=\"grado-formacion[]\" required>
+                                        <option value=\"\" selected>Seleccione...</option>
+                                        <option value=\"escuela\">Escuela</option>
+                                        <option value=\"colegio\">Colegio</option>
+                                        <option value=\"tecnico\">TÃ©cnico</option>
+                                        <option value=\"universidad\">Universidad</option>
+                                        <option value=\"otro\">Otro</option>
+                                    </select>
+                                </div>
+                                <div class=\"elementoForm\"><label>TÃ­tulo</label><input type=\"text\" name=\"titulo[]\" value=\"\" required /></div>
+                                <div class=\"elementoForm\"><label>DescripciÃ³n del curso</label><textarea name=\"descripcion-curso[]\" style=\"width:150px;\"></textarea></div>
+                                <div class=\"elementoForm\"><label>Fecha cursada</label><input type=\"date\" name=\"fecha-cursada[]\" value=\"\" /></div>
+                            </div>
+                        `;
+                        docs.appendChild(div);
+                    }
+                }
+                ['pestana2','pestana3','pestana4','pestana5','pestana9','pestana10'].forEach(pid=>{ const btn=document.getElementById(pid); if(btn&&btn.parentElement){ btn.parentElement.classList.add('active'); }});
+                const modalEl = document.getElementById('addWorkerModal');
+                if (modalEl) {
+                    const titleEl = document.getElementById('addWorkerModalLabel');
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (titleEl) titleEl.textContent = 'Editar Trabajador';
+                    if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios';
+                    (new bootstrap.Modal(modalEl)).show();
+                }
+            }
         })
-        .catch(error => {
-            console.error('Error al obtener datos:', error);
-        });
+        .catch(error => { console.error('Error al obtener datos:', error); });
     }
 
 
@@ -294,7 +566,7 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#workerview" data-bs-id="${worker.codeworker}">
                             <i class="fa-solid fa-magnifying-glass"></i> Ver
                         </button>
-                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editarModal" data-bs-id="${worker.codeworker}">
+                        <button class="btn btn-sm btn-warning" onclick="getDataWorker('${worker.codeworker}'); return false;">
                             <i class="fa-solid fa-pen-to-square"></i> Editar
                         </button>
                         <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="${worker.codeworker}">
@@ -500,7 +772,7 @@ function editWorkShift(workShiftId) {
     // Si ya estamos editando este turno, no hacer nada
     if (currentlyEditingShift === workShiftId) return;
     
-    // Si hay otro turno en edici¨®n, lo cerramos primero
+    // Si hay otro turno en ediciï¿½ï¿½n, lo cerramos primero
     if (currentlyEditingShift) {
         const prevSelect = document.getElementById(`turn-select-${currentlyEditingShift}`);
         if (prevSelect) {
@@ -514,14 +786,14 @@ function editWorkShift(workShiftId) {
     selectElement.disabled = false;
     selectElement.focus();
     
-    // Marcar como turno actualmente en edici¨®n
+    // Marcar como turno actualmente en ediciï¿½ï¿½n
     currentlyEditingShift = workShiftId;
     
-    // Resaltar visualmente la fila en edici¨®n
+    // Resaltar visualmente la fila en ediciï¿½ï¿½n
     const row = selectElement.closest('tr');
     row.classList.add('editing-row');
     
-    // Funci¨®n para finalizar la edici¨®n
+    // Funciï¿½ï¿½n para finalizar la ediciï¿½ï¿½n
     const finishEditing = () => {
         selectElement.disabled = true;
         updateTurnTimes(selectElement, workShiftId);
@@ -566,7 +838,7 @@ function updateTurnTimes(selectElement, workShiftId) {
     row.querySelector('.turn-end').textContent = endTime || 'N/A';
 }
 
-// Funci¨®n para formatear la hora consistentemente
+// Funciï¿½ï¿½n para formatear la hora consistentemente
 function formatTime(timeString) {
     if (!timeString) return null;
     
@@ -579,7 +851,7 @@ function formatTime(timeString) {
 }
 
 function saveWorkShiftChanges(workShiftId, newTurnId) {
-    // Aqu¨ª ir¨ªa el c¨®digo para guardar los cambios en la base de datos
+    // Aquï¿½ï¿½ irï¿½ï¿½a el cï¿½ï¿½digo para guardar los cambios en la base de datos
     console.log(`Guardando cambios: turno ${workShiftId} ahora es ${newTurnId}`);
     
     // Ejemplo de fetch:
@@ -691,7 +963,7 @@ function saveWorkShiftChanges(workShiftId, newTurnId) {
         }
     }
     
-    // Funci¨®n para cargar comboboxes
+    // Funciï¿½ï¿½n para cargar comboboxes
     async function cargarCombobox(elementId, url, selectedValue = '') {
         const selectElement = document.getElementById(elementId);
         selectElement.innerHTML = '<option value="">Cargando...</option>';

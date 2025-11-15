@@ -17,7 +17,7 @@
     <div class="modal-dialog modal-xl" style="width:96%;">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="agregarWorkerModalLabel">Agregar Trabajador</h1>
+                <h1 class="modal-title fs-5" id="addWorkerModalLabel">Agregar Trabajador</h1>
                 <button type="button" id="btn-cerrar-modal" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
    
@@ -222,8 +222,8 @@
         <section class="panel-contenido">  
                 <div class="containerInptsBusq">
                     <div class="inptBusq">
-                        <label for="searchInput" class="labelForm">Área:</label>
-                        <input oninput="buscarArea(this.value)" type="text" id="searchInput" placeholder="buscar área..." class="form-control">
+                        <label for="searchAreaInput" class="labelForm">Área:</label>
+                        <input oninput="buscarArea(this.value)" type="text" id="searchAreaInput" placeholder="buscar área..." class="form-control">
                         <input type="hidden" name="codearea" id="codearea" class="form-control">
                         <div id="suggestionsArea"></div>
                     </div>
@@ -234,8 +234,8 @@
                 </div>
                 <div class="containerInptsBusq">
                     <div class="inptBusq">
-                        <label for="searchInput" class="labelForm">Cargo:</label>
-                        <input oninput="buscarOccupation(this.value)" type="text" id="searchInput" placeholder="buscar cargo..." class="form-control">
+                        <label for="searchOccupationInput" class="labelForm">Cargo:</label>
+                        <input oninput="buscarOccupation(this.value)" type="text" id="searchOccupationInput" placeholder="buscar cargo..." class="form-control">
                         <input type="hidden" name="codeoccupation" id="codeoccupation" class="form-control">
                         <div id="suggestionsOccupation"></div>
                     </div>
@@ -246,8 +246,8 @@
                 </div>
                 <div class="containerInptsBusq">
                     <div class="inptBusq">
-                        <label for="searchInput" class="labelForm">Sección:</label>
-                        <input oninput="buscarSection(this.value)" type="text" id="searchInput"  placeholder="buscar sección..." class="form-control">
+                        <label for="searchSectionInput" class="labelForm">Sección:</label>
+                        <input oninput="buscarSection(this.value)" type="text" id="searchSectionInput"  placeholder="buscar sección..." class="form-control">
                         <input type="hidden" name="codesection" id="codesection" class="form-control">
                         <div id="suggestionsSection"></div>
                     </div>
@@ -538,9 +538,24 @@ function eliminarInputTurn(id) {
     turnoDiv.remove();
 }
     
-document.getElementById('addWorkerModal').addEventListener('shown.bs.modal', () => {
-    cargarTrabajadores();
-});
+const addWorkerModalEl = document.getElementById('addWorkerModal');
+if (addWorkerModalEl) {
+    addWorkerModalEl.addEventListener('show.bs.modal', () => {
+        const code = (document.getElementById('code_worker')?.value || '').trim();
+        const titleEl = document.getElementById('addWorkerModalLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        if (titleEl) titleEl.textContent = code ? 'Editar Trabajador' : 'Agregar Trabajador';
+        if (submitBtn) submitBtn.innerHTML = code ? '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios' : '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+    });
+    addWorkerModalEl.addEventListener('hidden.bs.modal', () => {
+        const codeInput = document.getElementById('code_worker');
+        if (codeInput) codeInput.value = '';
+        const titleEl = document.getElementById('addWorkerModalLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        if (titleEl) titleEl.textContent = 'Agregar Trabajador';
+        if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+    });
+}
 
 
 function crearInputsFamiliares() {
@@ -649,11 +664,11 @@ function crearInputTurn() {
         </div>
         <div class="elementoForm">
             <label class="labelForm">Horario de Inicio de Turno:</label>
-            <input type="text" class="form-control" name="turnstart[]" disabled required>
+            <input type="text" class="form-control" name="turnstart[]" readonly required>
         </div>
         <div class="elementoForm">
             <label class="labelForm">Horario de Fin de Turno:</label>
-            <input type="text" class="form-control" name="turnend[]" disabled required>
+            <input type="text" class="form-control" name="turnend[]" readonly required>
         </div>
         <div class="elementoForm">
             <button type="button" onclick="eliminarInputTurn(${contadorInputTurn})" class="btnOption2">
@@ -749,7 +764,12 @@ function validarFormularioAcordeon() {
         }
     });
     if (valido) {
-        const formData = new FormData(document.getElementById('formTrabajador'));
+        const formEl = document.getElementById('formTrabajador');
+        const formData = new FormData(formEl);
+        const codeIdVal = (document.getElementById('code_worker')?.value || '').trim();
+        if (codeIdVal) {
+            formData.set('codeworker_id', codeIdVal);
+        }
         let datosForm = {};
         formData.forEach((value, key) => {
             if (datosForm[key]) {
@@ -759,17 +779,30 @@ function validarFormularioAcordeon() {
             }
         });
         console.log("Datos a enviar:", datosForm);
-        fetch('routes/workers/addWorker.php', {
+        const targetUrl = codeIdVal ? '../routes/workers/updateWorker.php' : '../routes/workers/addWorker.php';
+        fetch(targetUrl, {
             method: 'POST',
             body: formData
         })
         .then(response => response.text())
         .then(data => {
             alert('Datos enviados correctamente');
-            console.log(data); 
-            
-            // Cerrar el modal después de enviar los datos
-            document.getElementById('btn-cerrar-modal').click();
+            console.log(data);
+            const submitBtnEl = document.getElementById('submitBtn');
+            if (submitBtnEl && typeof submitBtnEl.blur === 'function') submitBtnEl.blur();
+            if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+            const modalEl = document.getElementById('addWorkerModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.hide();
+            }
+            try {
+                if (typeof cargarTrabajadores === 'function') {
+                    cargarTrabajadores(window.currentPage || 1, window.rowsPerPage || 10);
+                }
+            } catch (e) {
+                console.warn('No se pudo refrescar la lista automáticamente:', e);
+            }
         })
         .catch(error => {
             alert('Hubo un error al enviar los datos');

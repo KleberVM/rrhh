@@ -10,7 +10,7 @@
                 Editar registro
             </div>
             <div class="modal-footer">
-                 <input type="text" id="code_worker" readonly>
+                 <input type="text" id="code_worker_edit" readonly>
                 <form action="routes/turn/deleteTurn.php" method="post">
                     <input type="hidden" name="codeturn" id="codeturn">
                     <button type="submit" class="btn btn-primary">Eliminar</button>

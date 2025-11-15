@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $extension = strtolower(pathinfo($file['name'][$index], PATHINFO_EXTENSION));
                             
                             if (in_array($extension, $extensionesPermitidas) && ($fileSize <= $maxFileSize)) {
-                                // Generar nombre único
+                                // Generar nombre 锟斤拷nico
                                 $nombreArchivo = uniqid('cert_', true) . '.' . $extension;
                                 $rutaDestino = $certificadosDir . $nombreArchivo;
                                 
@@ -223,16 +223,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $urlCertificado = $conn->quote('resource/certificados/' . $nombreArchivo);
                                 } else {
                                     error_log("Error al mover el archivo subido: " . $file['name'][$index]);
-                                    // Opcional: puedes agregar más detalles del error
+                                    // Opcional: puedes agregar m锟斤拷s detalles del error
                                     error_log("Error details: " . print_r(error_get_last(), true));
                                 }
                             } else {
                                 error_log("Archivo no permitido o muy grande: " . $file['name'][$index] . 
-                                        " (Tipo: $extension, Tamaño: $fileSize bytes)");
+                                        " (Tipo: $extension, Tama锟�0锟�9o: $fileSize bytes)");
                             }
                         } else {
                             error_log("Error en la subida del archivo: " . $file['name'][$index] . 
-                                    " (Código error: " . $file['error'][$index] . ")");
+                                    " (C锟斤拷digo error: " . $file['error'][$index] . ")");
                         }
                     }
                     
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   )";
                     
                     if (!$conn->exec($sqlDocument)) {
-                        throw new Exception("Error al insertar documento en la posición $index.");
+                        throw new Exception("Error al insertar documento en la posici锟斤拷n $index.");
                     }
                 }
             }

@@ -649,7 +649,13 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
             inputMobile1.textContent = data.workerphone1 || 'N/A';
             inputMobile2.textContent = data.workerphone2 || 'N/A';
             inputAddress.textContent = data.workeraddress || 'N/A';
-            inputPhoto.src = data.workerimg || '/resource/images/foto-perfil-hombre.avif';
+            (function(){
+                const appBase = window.location.pathname.includes('/rrhh/') ? '/rrhh/' : '/';
+                const defaultImg = appBase + (data.workersex === 'F' ? 'resource/images/foto-perfil-mujer.avif' : 'resource/images/foto-perfil-hombre.avif');
+                const src = data.workerimg ? (appBase + String(data.workerimg).replace(/^\/?/, '')) : defaultImg;
+                inputPhoto.src = src;
+                inputPhoto.onerror = function(){ this.src = defaultImg; };
+            })();
             inputStartDate.textContent = data.workerdateinit || 'N/A';
             inputEndDate.textContent = data.workerdateout || 'N/A';
             inputDepartment.textContent = data.workerarea_name || 'N/A';

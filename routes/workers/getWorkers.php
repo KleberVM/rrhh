@@ -44,7 +44,8 @@ try {
             workerimg, 
             COALESCE(occupation.nameoccupation, '') as workerrol, 
             workerdateinit, 
-            workersex
+            workersex,
+            workercivilstatus
         FROM worker
         LEFT JOIN occupation ON occupation.codeoccupation = worker.workerrol
         WHERE (workercode LIKE :buscar 
@@ -70,7 +71,8 @@ try {
             'workerimg' => !empty($row['workerimg']) ? $row['workerimg'] : '',
             'workerrol' => $row['workerrol'],
             'workerdateinit' => $row['workerdateinit'],
-            'workersex' => $row['workersex']
+            'workersex' => $row['workersex'],
+            'workercivilstatus' => $row['workercivilstatus']
         ];
     }
 

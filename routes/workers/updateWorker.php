@@ -200,32 +200,41 @@ try {
     if (isset($_POST['grado-formacion']) && is_array($_POST['grado-formacion'])) {
         $certificadosDir = '../../resource/certificados/';
         if (!file_exists($certificadosDir)) mkdir($certificadosDir, 0777, true);
-        $file = $_FILES['foto-certificado'] ?? null;
+        $files = $_FILES['foto-certificado'] ?? null;
         $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf', 'webp', 'avif'];
         $maxFileSize = 30 * 1024 * 1024;
+        $conn->exec("DELETE FROM documentWorker WHERE codeworker = $codeworkerId");
         foreach ($_POST['grado-formacion'] as $index => $grado) {
-            $gradoFormacion = $conn->quote($grado);
+            $gradoFormacion = $conn->quote($_POST['grado-formacion'][$index] ?? '');
             $titulo = $conn->quote($_POST['titulo'][$index] ?? '');
             $descripcionCurso = $conn->quote($_POST['descripcion-curso'][$index] ?? '');
-            $fechaCursada = $conn->quote($_POST['fecha-cursada'][$index] ?? '');
+            $fechaRaw = $_POST['fecha-cursada'][$index] ?? '';
+            if (strpos($fechaRaw, '/') !== false) {
+                $parts = explode('/', $fechaRaw);
+                if (count($parts) === 3) {
+                    $fechaRaw = sprintf('%04d-%02d-%02d', (int)$parts[2], (int)$parts[1], (int)$parts[0]);
+                }
+            }
+            $fechaCursada = $conn->quote($fechaRaw);
             $urlCertificado = 'NULL';
-            if ($file && isset($file['name'][$index])) {
-                if ($file['error'][$index] === UPLOAD_ERR_OK) {
-                    $fileSize = $file['size'][$index];
-                    $extension = strtolower(pathinfo($file['name'][$index], PATHINFO_EXTENSION));
+            if (isset($_POST['url-certificado']) && isset($_POST['url-certificado'][$index]) && $_POST['url-certificado'][$index] !== '') {
+                $urlCertificado = $conn->quote($_POST['url-certificado'][$index]);
+            }
+            if ($files && isset($files['name'][$index])) {
+                if ($files['error'][$index] === UPLOAD_ERR_OK) {
+                    $fileSize = $files['size'][$index];
+                    $extension = strtolower(pathinfo($files['name'][$index], PATHINFO_EXTENSION));
                     if (in_array($extension, $extensionesPermitidas) && ($fileSize <= $maxFileSize)) {
                         $nombreArchivo = uniqid('cert_', true) . '.' . $extension;
                         $rutaDestino = $certificadosDir . $nombreArchivo;
-                        if (move_uploaded_file($file['tmp_name'][$index], $rutaDestino)) {
+                        if (move_uploaded_file($files['tmp_name'][$index], $rutaDestino)) {
                             $urlCertificado = $conn->quote('resource/certificados/' . $nombreArchivo);
                         }
                     }
                 }
             }
-            if ($file && isset($file['name'][$index]) && $file['error'][$index] === UPLOAD_ERR_OK) {
-                $sqlDocument = "INSERT INTO documentWorker (codeWorker, gradoFormacion, titulo, urlCertificado, descripcionCurso, fechaCursada) VALUES ($codeworkerId, $gradoFormacion, $titulo, $urlCertificado, $descripcionCurso, $fechaCursada)";
-                if ($conn->exec($sqlDocument) === false) throw new Exception('Error al actualizar documentos');
-            }
+            $sqlDocument = "INSERT INTO documentWorker (codeworker, gradoFormacion, titulo, urlCertificado, descripcionCurso, fechaCursada) VALUES ($codeworkerId, $gradoFormacion, $titulo, $urlCertificado, $descripcionCurso, $fechaCursada)";
+            if ($conn->exec($sqlDocument) === false) throw new Exception('Error al actualizar documentos');
         }
     }
 

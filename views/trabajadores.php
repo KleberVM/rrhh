@@ -428,21 +428,34 @@ document.addEventListener("DOMContentLoaded", pintarBtnSub);
                         docList.forEach(doc => {
                             const div = document.createElement('div');
                             div.className = 'document';
+                            const gf = (doc.gradoFormacion || '').toString().trim().toLowerCase();
+                            let fecha = (doc.fechaCursada || '').toString().trim();
+                            if (fecha && fecha.includes('/')) {
+                                const p = fecha.split('/');
+                                if (p.length === 3) {
+                                    const d = p[0].padStart(2,'0');
+                                    const m = p[1].padStart(2,'0');
+                                    const y = p[2];
+                                    fecha = `${y}-${m}-${d}`;
+                                }
+                            }
                             div.innerHTML = `
-                                <div style=\"background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;\">
+                                <div style=\"background:#fdfdfd; margin:5px; border-radius:7px; padding:10px;\">\n
                                     <div class=\"elementoForm\"><label>Grado de formación</label>
                                         <select name=\"grado-formacion[]\" required>
-                                            <option value=\"\" ${doc.gradoFormacion ? '' : 'selected'}>Seleccione...</option>
-                                            <option value=\"escuela\" ${doc.gradoFormacion==='escuela'?'selected':''}>Escuela</option>
-                                            <option value=\"colegio\" ${doc.gradoFormacion==='colegio'?'selected':''}>Colegio</option>
-                                            <option value=\"tecnico\" ${doc.gradoFormacion==='tecnico'?'selected':''}>Técnico</option>
-                                            <option value=\"universidad\" ${doc.gradoFormacion==='universidad'?'selected':''}>Universidad</option>
-                                            <option value=\"otro\" ${doc.gradoFormacion==='otro'?'selected':''}>Otro</option>
+                                            <option value=\"\" ${gf ? '' : 'selected'}>Seleccione...</option>
+                                            <option value=\"escuela\" ${gf==='escuela'?'selected':''}>Escuela</option>
+                                            <option value=\"colegio\" ${gf==='colegio'?'selected':''}>Colegio</option>
+                                            <option value=\"tecnico\" ${gf==='tecnico'?'selected':''}>Técnico</option>
+                                            <option value=\"universidad\" ${gf==='universidad'?'selected':''}>Universidad</option>
+                                            <option value=\"otro\" ${gf==='otro'?'selected':''}>Otro</option>
                                         </select>
                                     </div>
                                     <div class=\"elementoForm\"><label>Título</label><input type=\"text\" name=\"titulo[]\" value=\"${doc.titulo || ''}\" required /></div>
                                     <div class=\"elementoForm\"><label>Descripción del curso</label><textarea name=\"descripcion-curso[]\" style=\"width:150px;\">${doc.descripcionCurso || ''}</textarea></div>
-                                    <div class=\"elementoForm\"><label>Fecha cursada</label><input type=\"date\" name=\"fecha-cursada[]\" value=\"${doc.fechaCursada || ''}\" /></div>
+                                    <div class=\"elementoForm\"><label>Fecha cursada</label><input type=\"date\" name=\"fecha-cursada[]\" value=\"${fecha}\" /></div>
+                                    <div class=\"elementoForm\"><label>Archivo certificado</label><input type=\"file\" name=\"foto-certificado[]\" accept=\"image/*,.pdf\" /></div>
+                                    <input type=\"hidden\" name=\"url-certificado[]\" value=\"${doc.urlCertificado || ''}\" />
                                     ${doc.urlCertificado ? `<div class=\"elementoForm\"><a href=\"${doc.urlCertificado}\" target=\"_blank\">Ver certificado</a></div>` : ''}
                                 </div>
                             `;

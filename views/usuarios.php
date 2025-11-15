@@ -102,7 +102,8 @@ let paginaActual = 1;
                                 <a href="#" class="btn btn-sm btn-danger" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#deleteUserModal" 
-                                    data-bs-id="${usuario.codeuser}">
+                                    data-bs-id="${usuario.codeuser}" 
+                                    data-bs-state="${usuario.userstate}">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
                             </td>
@@ -127,11 +128,25 @@ let paginaActual = 1;
     eliminaModal.addEventListener('show.bs.modal', event => {
         let button = event.relatedTarget;
         let codeuser = button.getAttribute('data-bs-id');
+        let state = (button.getAttribute('data-bs-state') || '').toLowerCase();
         eliminaModal.querySelector('.modal-footer #codeuser').value = codeuser;
+        const submitBtn = eliminaModal.querySelector('.modal-footer button[type="submit"]');
+        const bodyEl = eliminaModal.querySelector('.modal-body');
+        if (state === 'inactivo') {
+            submitBtn.disabled = true;
+            if (bodyEl) bodyEl.textContent = 'El usuario ya está INACTIVO.';
+        } else {
+            submitBtn.disabled = false;
+            if (bodyEl) bodyEl.textContent = '¿Desea marcar este usuario como INACTIVO?';
+        }
     });
     
     eliminaModal.addEventListener('hidden.bs.modal', () => {
         eliminaModal.querySelector('.modal-footer #codeuser').value = '';
+        const submitBtn = eliminaModal.querySelector('.modal-footer button[type="submit"]');
+        const bodyEl = eliminaModal.querySelector('.modal-body');
+        if (submitBtn) submitBtn.disabled = false;
+        if (bodyEl) bodyEl.textContent = '¿Desea eliminar el registro?';
     });
     
     setTimeout(function() {

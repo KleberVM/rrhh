@@ -1,20 +1,52 @@
 <?php
 include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
+$roleName = '';
+try {
+    if (isset($_SESSION['usertype'])) {
+        require_once __DIR__ . '/../config/database.php';
+        $db = new Database();
+        $conn = $db->getConnection();
+        if ($conn) {
+            $stmt = $conn->prepare('SELECT namecategory FROM category WHERE codecategory = :id');
+            $stmt->bindValue(':id', (int)$_SESSION['usertype'], PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row && isset($row['namecategory'])) {
+                $roleName = strtolower(trim($row['namecategory']));
+            }
+        }
+    }
+} catch (Exception $e) {}
+$isAdmin = ($roleName === 'admin');
+$isEnroll = ($roleName === 'enroll');
+$isRrhh = ($roleName === 'rrhh');
+$showInicio = true;
+$showTrabajadores = true;
+$showOrganizacion = true;
+$showTurnos = $isAdmin || $isEnroll;
+$showAsistencias = $isAdmin || $isEnroll;
+$showMovimientos = $isAdmin;
+$showUsuarios = $isAdmin;
 ?>
 </head>
 <body>
 <nav class="menu-lateral">
+    <?php if ($showInicio): ?>
     <button id="btn-inicio" onclick="link('Inicio');">
         <div class="containerLetraIcon">
             <i class="fas fa-users"></i><span class="letrasBtns">INICIO</span>
         </div>
     </button>
+    <?php endif; ?>
+    <?php if ($showTrabajadores): ?>
     <button id="btn-trabajadores" onclick="link('trabajadores');">
         <div class="containerLetraIcon">
             <i class="fas fa-users"></i><span class="letrasBtns">TRABAJADORES</span>
         </div>
     </button>
+    <?php endif; ?>
 
+    <?php if ($showOrganizacion): ?>
     <button onclick="desplegarSubMenu('organizacion')">
         <div class="containerLetraIcon">
             <i class="fas fa-sitemap"></i><span class="letrasBtns">ORGANIZACION</span>
@@ -38,7 +70,9 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             </div>
         </button>
     </ul>
+    <?php endif; ?>
 
+    <?php if ($showTurnos): ?>
     <button onclick="desplegarSubMenu('turnos')">
         <div class="containerLetraIcon">
             <i class="fas fa-calendar-alt"></i><span class="letrasBtns">TURNOS</span>
@@ -67,7 +101,9 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             </div>
         </button>
     </ul>
+    <?php endif; ?>
 
+    <?php if ($showAsistencias): ?>
     <button onclick="desplegarSubMenu('asistencias')">
         <div class="containerLetraIcon">
             <i class="fas fa-sitemap"></i><span class="letrasBtns">ASISTENCIAS</span>
@@ -120,6 +156,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
                 </button>
             </ul>
     </ul><!--fin asistencias-->
+    <?php endif; ?>
     
     
     
@@ -129,6 +166,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
     
     
     
+    <?php if ($showMovimientos): ?>
     <button onclick="desplegarSubMenu('movimientos')">
         <div class="containerLetraIcon">
             <i class="fas fa-sitemap"></i><span class="letrasBtns">MOVIMIENTOS</span>
@@ -191,13 +229,16 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
                 </button>
             </ul>        
     </ul>
+    <?php endif; ?>
 
 
+    <?php if ($showUsuarios): ?>
     <button id="btn-usuarios" onclick="link('usuarios');">
         <div class="containerLetraIcon">
             <i class="fas fa-user"></i><span class="letrasBtns">USUARIOS</span>
         </div>
     </button>
+    <?php endif; ?>
 </nav>
 
 
@@ -260,12 +301,12 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
     'usuarios': 'btn-usuarios',
     };
 
-    // Funci¨®n para resaltar el bot¨®n activo
+    // Funciï¿½ï¿½n para resaltar el botï¿½ï¿½n activo
     function resaltarBoton() {
         const urlParams = new URLSearchParams(window.location.search);
         const parametro = urlParams.get('p');
     
-        // Mapeo de par¨¢metros a submen¨²s
+        // Mapeo de parï¿½ï¿½metros a submenï¿½ï¿½s
         const submenuMap = {
             'subviews/area': ['organizacion'],
             'subviews/cargo': ['organizacion'],
@@ -293,7 +334,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             'subviews/asignardesc': ['movimientos', 'descuentos'],
         };
     
-        // Resaltar el bot¨®n correspondiente
+        // Resaltar el botï¿½ï¿½n correspondiente
         if (botones[parametro]) {
             const boton = document.getElementById(botones[parametro]);
             if (boton) {
@@ -301,7 +342,7 @@ include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
             }
         }
     
-        // Mostrar los submen¨²s correspondientes
+        // Mostrar los submenï¿½ï¿½s correspondientes
         if (submenuMap[parametro]) {
             submenuMap[parametro].forEach(submenuId => {
                 const submenu = document.getElementById(submenuId);

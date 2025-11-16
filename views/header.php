@@ -1,15 +1,34 @@
 <?php
 //include($_SERVER['DOCUMENT_ROOT'] . '/config/sessionController.php');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];
     $message_type = $_SESSION['message_type'];
-    
     echo "<div class='message $message_type notification verde'>$message</div>";
-    
     unset($_SESSION['message']);
     unset($_SESSION['message_type']);
 }
+
+$userTypeName = '';
+try {
+    if (isset($_SESSION['usertype'])) {
+        require_once __DIR__ . '/../config/database.php';
+        $db = new Database();
+        $conn = $db->getConnection();
+        if ($conn) {
+            $stmt = $conn->prepare('SELECT namecategory FROM category WHERE codecategory = :id');
+            $stmt->bindValue(':id', (int)$_SESSION['usertype'], PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row && isset($row['namecategory'])) {
+                $userTypeName = $row['namecategory'];
+            }
+        }
+    }
+} catch (Exception $e) {}
 ?>
 
 
@@ -36,13 +55,16 @@ if (isset($_SESSION['message'])) {
     <h3 class="tituloSistema">SISTEMA DE RRHH</h3>
     
     <section class="nameUserbtnCerrar">
-        <div class="me-3 text-end">
-            <span class="d-block fw-bold text-primary">
-            <?php echo htmlspecialchars($_SESSION["username"], ENT_QUOTES, 'UTF-8'); ?>
+        <div class="me-3 text-end d-flex align-items-center" style="gap:6px;">
+            <span class="fw-bold text-primary">
+            <?php echo htmlspecialchars($_SESSION["username"] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+            </span>
+            <span style="font-size:0.85rem;color:#555;">
+                Tipo: <?php echo htmlspecialchars($userTypeName ?: '', ENT_QUOTES, 'UTF-8'); ?>
             </span>
         </div> 
         <button onclick="window.location.href='../config/logoutController.php'" class="btnCerrarSesion">
-            <span>Salir</span>
+            <span>Salirr</span>
         </button>
     </section>
 </section>
